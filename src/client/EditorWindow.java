@@ -37,6 +37,8 @@ public class EditorWindow {
 
 
     private void buildUI() {
+        connection.setListener(this::handleMessage);
+
         frame = new JFrame("Shared Text Editor — " + username);
         frame.setSize(900, 600);
         frame.setLocationRelativeTo(null);
@@ -131,9 +133,7 @@ public class EditorWindow {
         releaseBtn.addActionListener(e -> doRelease());
 
 
-        connection.setListener(this::handleMessage);
-
-
+        connection.startListening();
         connection.send(Protocol.CONNECT, username);
 
         frame.setVisible(true);
@@ -141,12 +141,19 @@ public class EditorWindow {
 
     private void doView() {
         if (selectedFile == null) return;
+        isEditing = false;
         connection.send(Protocol.VIEW, selectedFile);
     }
 
     private void doEdit() {
         if (selectedFile == null) return;
+        if (editingFile != null) return;
+        isEditing = true;
+        editingFile = selectedFile;
+        editBtn.setEnabled(false);
+        viewBtn.setEnabled(false);
         connection.send(Protocol.EDIT, selectedFile);
+        updateButtons();
     }
 
     private void doSave() {
@@ -161,6 +168,12 @@ public class EditorWindow {
     private void doRelease() {
         if (editingFile == null) return;
         connection.send(Protocol.RELEASE, editingFile);
+        editingFile = null;
+        isEditing = false;
+        editorArea.setEditable(false);
+        editorArea.setText("");
+        fileStatusLabel.setText("Selectează un fișier");
+        updateButtons();
     }
 
 
@@ -201,14 +214,19 @@ public class EditorWindow {
 
         if (parts.length >= 2) {
             String filename = parts[1];
-
-            if (filename.equals(editingFile)) {
-                editorArea.setEditable(true);
-            }
             editorArea.setText(String.join("\n", body));
             editorArea.setCaretPosition(0);
-            fileStatusLabel.setText(filename +
-                    (isEditing ? " — în editare" : " — vizualizare"));
+
+            if (isEditing && filename.equals(editingFile)) {
+                editorArea.setEditable(true);
+                fileStatusLabel.setText(filename + " — în editare");
+            } else {
+                editorArea.setEditable(false);
+                editingFile = null;
+                isEditing = false;
+                fileStatusLabel.setText(filename + " — vizualizare");
+            }
+            updateButtons();
         }
     }
 

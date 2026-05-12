@@ -74,6 +74,7 @@ public class ClientHandler implements Runnable {
     }
 
     private boolean processCommand(String line) throws IOException {
+        System.out.println("[" + username + "] " + line);
         String[] parts = line.split("\\" + Protocol.SEP, 2);
         String cmd = parts[0];
         String arg = parts.length > 1 ? parts[1] : "";

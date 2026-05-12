@@ -1,5 +1,7 @@
 package client;
 
+import common.Protocol;
+
 import javax.swing.*;
 import java.awt.*;
 
