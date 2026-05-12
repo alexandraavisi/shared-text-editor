@@ -20,8 +20,8 @@ public class ClientHandler implements Runnable {
     private PrintWriter writer;
 
     private String username;
-    private String currentlyViewing;  // fisierul vizualizat curent
-    private String currentlyEditing;  // fisierul in editare curent
+    private String currentlyViewing;
+    private String currentlyEditing;
 
     public ClientHandler(Socket socket, FileManager fileManager, ClientRegistry registry) {
         this.socket = socket;
@@ -50,9 +50,6 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // -------------------------------------------------------
-    // Autentificare
-    // -------------------------------------------------------
 
     private void handleConnect() throws IOException {
         String line = reader.readLine();
@@ -73,13 +70,8 @@ public class ClientHandler implements Runnable {
         username = name;
         log.info("Client autentificat: " + username);
 
-        // Trimite lista fisierelor
         sendFileList();
     }
-
-    // -------------------------------------------------------
-    // Procesare comenzi
-    // -------------------------------------------------------
 
     private boolean processCommand(String line) throws IOException {
         String[] parts = line.split("\\" + Protocol.SEP, 2);
@@ -110,9 +102,6 @@ public class ClientHandler implements Runnable {
         return true;
     }
 
-    // -------------------------------------------------------
-    // Handlers comenzi
-    // -------------------------------------------------------
 
     private void handleView(String filename) throws IOException {
         if (!fileManager.exists(filename)) {
@@ -147,7 +136,6 @@ public class ClientHandler implements Runnable {
             return;
         }
 
-        // Notifica ceilalti clienti
         registry.broadcast(
                 Protocol.NOTIFY_EDIT + Protocol.SEP + filename + Protocol.SEP + username,
                 username
@@ -155,7 +143,7 @@ public class ClientHandler implements Runnable {
     }
 
     private void handleSave(String arg) throws IOException {
-        // Format: <filename>|<linecount>
+
         String[] parts = arg.split("\\" + Protocol.SEP, 2);
         if (parts.length < 2) {
             sendMessage(Protocol.ERROR, "Format SAVE invalid.");
@@ -176,7 +164,6 @@ public class ClientHandler implements Runnable {
             return;
         }
 
-        // Citeste continutul
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < lineCount; i++) {
             String line = reader.readLine();
@@ -189,7 +176,6 @@ public class ClientHandler implements Runnable {
         fileManager.writeFile(filename, content);
         sendMessage(Protocol.OK);
 
-        // Notifica vizualizatorii cu noul continut
         List<String> lines = Arrays.asList(content.split("\n", -1));
         registry.broadcastToViewers(filename, username, lines);
     }
@@ -204,13 +190,9 @@ public class ClientHandler implements Runnable {
         currentlyEditing = null;
         sendMessage(Protocol.OK);
 
-        // Notifica toti clientii ca fisierul e liber
         registry.broadcastAll(Protocol.NOTIFY_RELEASE + Protocol.SEP + filename);
     }
 
-    // -------------------------------------------------------
-    // Curatare la deconectare
-    // -------------------------------------------------------
 
     private void cleanup() {
         // Elibereaza fisierul daca era in editare
@@ -230,9 +212,6 @@ public class ClientHandler implements Runnable {
         try { socket.close(); } catch (IOException ignored) {}
     }
 
-    // -------------------------------------------------------
-    // Utilitare trimitere mesaje
-    // -------------------------------------------------------
 
     private void sendMessage(String... parts) {
         writer.println(String.join(Protocol.SEP, parts));
@@ -257,7 +236,6 @@ public class ClientHandler implements Runnable {
         writer.flush();
     }
 
-    // Apelat din ClientRegistry pentru notificari push
     public void sendNotification(String message) {
         writer.println(message);
         writer.flush();
@@ -271,7 +249,6 @@ public class ClientHandler implements Runnable {
         writer.flush();
     }
 
-    // Verificare daca clientul vizualizeaza un anumit fisier
     public boolean isViewing(String filename) {
         return filename.equals(currentlyViewing);
     }
