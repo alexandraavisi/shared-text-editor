@@ -23,7 +23,6 @@ public class ServerMain {
 
         ClientRegistry registry = new ClientRegistry();
 
-        // Thread pentru detectia fisierelor adaugate/sterse
         startFileWatcher(fileManager, registry);
 
         System.out.println("Server pornit pe portul " + PORT);
@@ -40,14 +39,12 @@ public class ServerMain {
         }
     }
 
-    // Verifica la fiecare 3 secunde daca au aparut/disparut fisiere
     private static void startFileWatcher(FileManager fileManager, ClientRegistry registry) {
         Thread watcher = new Thread(() -> {
             while (true) {
                 try {
                     Thread.sleep(3000);
 
-                    // Fisiere nou aparute
                     List<String> added = fileManager.detectAdded();
                     for (String name : added) {
                         System.out.println("Fisier adaugat: " + name);
@@ -56,7 +53,6 @@ public class ServerMain {
                         );
                     }
 
-                    // Fisiere sterse
                     List<String> deleted = fileManager.detectDeleted();
                     for (String name : deleted) {
                         System.out.println("Fisier sters: " + name);
@@ -73,7 +69,7 @@ public class ServerMain {
                 }
             }
         });
-        watcher.setDaemon(true); // se opreste cand se opreste serverul
+        watcher.setDaemon(true);
         watcher.start();
     }
 }
