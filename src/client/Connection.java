@@ -26,9 +26,10 @@ public class Connection {
     public boolean connect(String host, int port) {
         try {
             this.socket = new Socket(host, port);
-            this.reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            this.writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-            startListening();
+            this.reader = new BufferedReader(
+                    new InputStreamReader(socket.getInputStream()));
+            this.writer = new PrintWriter(
+                    new OutputStreamWriter(socket.getOutputStream()), true);
             return true;
         } catch (IOException e) {
             return false;
@@ -56,7 +57,7 @@ public class Connection {
         } catch (IOException ignored) {}
     }
 
-    private void startListening() {
+    public void startListening() {
         listenerThread = new Thread(() -> {
             try {
                 String line;
